@@ -7,34 +7,15 @@ using Pseudo;
 
 public class HexagonSystem : SystemBase
 {
-	IEntityGroup entities;
-
-	public override void OnInitialize()
+	public override IEntityGroup GetEntities()
 	{
-		base.OnInitialize();
-
-		entities = EntityManager.Entities.Filter(typeof(HexagonComponent));
+		return EntityManager.Entities.Filter(typeof(HexagonComponent));
 	}
 
-	public override void OnActivate()
+	public override void OnEntityAdded(IEntity entity)
 	{
-		base.OnActivate();
+		base.OnEntityAdded(entity);
 
-		entities.OnEntityAdded += OnEntityAdded;
-
-		for (int i = 0; i < entities.Count; i++)
-			OnEntityAdded(entities[i]);
-	}
-
-	public override void OnDeactivate()
-	{
-		base.OnDeactivate();
-
-		entities.OnEntityAdded -= OnEntityAdded;
-	}
-
-	void OnEntityAdded(IEntity entity)
-	{
 		var polygon = entity.GetComponent<HexagonComponent>();
 		var mesh = polygon.Renderer.Mesh;
 		var vertices = mesh.vertices;

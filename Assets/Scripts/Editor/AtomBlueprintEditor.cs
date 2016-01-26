@@ -32,24 +32,26 @@ public class AtomBlueprintEditor : CustomEditorBase
 				quark.Position = quark.Position.Round(snap.x, Axes.X).Round(snap.y, Axes.Y);
 				blueprint.Quarks[i] = quark;
 
-				UpdateConnections();
+				UpdateQuarkConnections();
+				UpdateElectronConnections();
 			}
 		}
 
 		for (int i = 0; i < blueprint.Electrons.Length; i++)
 		{
 			var electron = blueprint.Electrons[i];
-			electron.Position = Handles.FreeMoveHandle(electron.Position, Quaternion.identity, 0.25f, Vector3.zero, Handles.CylinderCap);
+			electron.Position = Handles.FreeMoveHandle(electron.Position, Quaternion.identity, 0.333f, Vector3.zero, Handles.CylinderCap);
 
 			if (GUI.changed)
 			{
 				electron.Position = electron.Position.Round(snap.x * 0.5f, Axes.X).Round(snap.y * 0.5f, Axes.Y);
 				blueprint.Electrons[i] = electron;
+				UpdateElectronConnections();
 			}
 		}
 	}
 
-	void UpdateConnections()
+	void UpdateQuarkConnections()
 	{
 		for (int i = 0; i < blueprint.Quarks.Length; i++)
 		{
@@ -78,6 +80,23 @@ public class AtomBlueprintEditor : CustomEditorBase
 		}
 	}
 
+	void UpdateElectronConnections()
+	{
+		if (blueprint.Quarks.Length == 0)
+			return;
+
+		for (int i = 0; i < blueprint.Electrons.Length; i++)
+		{
+			var electron = blueprint.Electrons[i];
+			var quarkIndex = blueprint.Quarks.FindSmallestIndex((quarkA, quarkB) => Vector3.Distance(electron.Position, quarkA.Position).CompareTo(Vector3.Distance(electron.Position, quarkB.Position)));
+			var connection = new AtomBlueprint.Connection { Index = quarkIndex, };
+
+			GetSegments(electron.Position, blueprint.Quarks[quarkIndex].Position, out connection.SegmentA, out connection.SegmentB);
+			electron.Connection = connection;
+			blueprint.Electrons[i] = electron;
+		}
+	}
+
 	void DrawHexagonCap(int controlID, Vector3 position, Quaternion rotation, float size)
 	{
 		var hexagon = new Vector3[7];
@@ -93,7 +112,7 @@ public class AtomBlueprintEditor : CustomEditorBase
 	{
 		var difference = positionB - positionA;
 
-		if (difference.y == 0f)
+		if (Mathf.Approximately(difference.y, 0f))
 		{
 			segmentA = difference.x > 0f ? 4 : 1;
 			segmentB = difference.x > 0f ? 1 : 4;

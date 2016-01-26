@@ -7,23 +7,19 @@ using Pseudo;
 
 public class FollowContourSystem : SystemBase, IUpdateable
 {
-	IEntityGroup entities;
-
-	public override void OnInitialize()
+	public override IEntityGroup GetEntities()
 	{
-		base.OnInitialize();
-
-		entities = EntityManager.Entities.Filter(new Type[]
+		return EntityManager.Entities.Filter(new Type[]
 		{
+			typeof(TimeComponent),
 			typeof(FollowContourComponent),
-			typeof(TimeComponent)
 		});
 	}
 
 	public void Update()
 	{
-		for (int i = 0; i < entities.Count; i++)
-			UpdatePath(entities[i]);
+		for (int i = 0; i < Entities.Count; i++)
+			UpdatePath(Entities[i]);
 	}
 
 	void UpdatePath(IEntity entity)

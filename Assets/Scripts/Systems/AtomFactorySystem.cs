@@ -7,13 +7,22 @@ using Pseudo;
 
 public class AtomFactorySystem : SystemBase
 {
-	IEntityGroup entities;
+	IEntityGroup quarkEntities;
+	IEntityGroup electronEntities;
 
-	public override void OnInitialize()
+	public override IEntityGroup GetEntities()
 	{
-		base.OnInitialize();
+		quarkEntities = EntityManager.Entities.Filter(EntityGroups.Fermion).Filter(new Type[]
+		{
+			typeof(HexagonComponent),
+		});
+		electronEntities = EntityManager.Entities.Filter(EntityGroups.Fermion).Filter(new Type[]
+		{
+			typeof(TimeComponent),
+			typeof(FollowContourComponent),
+		});
 
-		entities = EntityManager.Entities.Filter(typeof(AtomFactoryComponent));
+		return EntityManager.Entities.Filter(typeof(AtomFactoryComponent));
 	}
 
 	public override void OnActivate()
@@ -32,7 +41,7 @@ public class AtomFactorySystem : SystemBase
 
 	void CreateAtom(IEntity entity, AtomBlueprint.Particles particles, AtomBlueprint blueprint)
 	{
-		if (!entities.Contains(entity))
+		if (!Entities.Contains(entity))
 			return;
 
 		if (!IsValid(particles, blueprint))
@@ -61,14 +70,18 @@ public class AtomFactorySystem : SystemBase
 
 		for (int i = 0; i < particles.Electrons.Count; i++)
 		{
+			var blueprintElectron = blueprint.Electrons[i];
+			var electronConnection = blueprintElectron.Connection;
 			var electron = particles.Electrons[i];
+			var connectedQuark = particles.Quarks[electronConnection.Index];
+			var connectedHexagon = connectedQuark.GetComponent<HexagonComponent>();
 			var follow = electron.GetComponent<FollowContourComponent>();
 			var transform = electron.GetComponent<TransformComponent>().Transform;
 
 			follow.Contour = atom.Contour;
-			follow.CurrentSegment = 0;
+			follow.CurrentSegment = atom.Contour.Segments.FindIndex(segment => segment == connectedHexagon.Segments[electronConnection.SegmentB]);
 			transform.parent = atomEntity.CachedTransform;
-			transform.localPosition = blueprint.Electrons[i].Position;
+			transform.localPosition = blueprintElectron.Position;
 		}
 	}
 
@@ -77,8 +90,8 @@ public class AtomFactorySystem : SystemBase
 		return
 			particles.Quarks.Count == blueprint.Quarks.Length &&
 			particles.Electrons.Count == blueprint.Electrons.Length &&
-			particles.Quarks.All(entity => entity.HasComponent<HexagonComponent>()) &&
-			particles.Electrons.All(entity => entity.HasComponent<FollowContourComponent>());
+			particles.Quarks.All(entity => quarkEntities.Contains(entity)) &&
+			particles.Electrons.All(entity => electronEntities.Contains(entity));
 	}
 
 	PolygonContour CalculateContour(List<IEntity> particles, AtomBlueprint blueprint)

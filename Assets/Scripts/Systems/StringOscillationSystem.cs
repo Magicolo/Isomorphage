@@ -7,38 +7,19 @@ using Pseudo;
 
 public class StringOscillationSystem : SystemBase, IUpdateable
 {
-	IEntityGroup entities;
-
-	public override void OnInitialize()
+	public override IEntityGroup GetEntities()
 	{
-		base.OnInitialize();
-
-		entities = EntityManager.Entities.Filter(new[]
+		return EntityManager.Entities.Filter(new[]
 		{
 			typeof(TimeComponent),
 			typeof(StringOscillationComponent)
 		});
-
-		for (int i = 0; i < entities.Count; i++)
-			OnEntityAdded(entities[i]);
 	}
 
-	public override void OnActivate()
+	public override void OnEntityAdded(IEntity entity)
 	{
-		base.OnActivate();
+		base.OnEntityAdded(entity);
 
-		entities.OnEntityAdded += OnEntityAdded;
-	}
-
-	public override void OnDeactivate()
-	{
-		base.OnDeactivate();
-
-		entities.OnEntityAdded -= OnEntityAdded;
-	}
-
-	void OnEntityAdded(IEntity entity)
-	{
 		var oscillator = entity.GetComponent<StringOscillationComponent>();
 		oscillator.Positions = new Vector3[oscillator.Definition + 1];
 		oscillator.Oscillations = new Vector4[oscillator.Definition];
@@ -56,8 +37,8 @@ public class StringOscillationSystem : SystemBase, IUpdateable
 
 	public void Update()
 	{
-		for (int i = 0; i < entities.Count; i++)
-			UpdateOscillation(entities[i]);
+		for (int i = 0; i < Entities.Count; i++)
+			UpdateOscillation(Entities[i]);
 	}
 
 	void UpdateOscillation(IEntity entity)
