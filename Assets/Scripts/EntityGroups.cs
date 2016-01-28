@@ -12,5 +12,6 @@ namespace Pseudo
 		public static readonly EntityGroups Fermion = new EntityGroups(1);
 		public static readonly EntityGroups Boson = new EntityGroups(16);
 		public static readonly EntityGroups Atom = new EntityGroups(32);
+		public static readonly EntityGroups Level_Tile = new EntityGroups(128);
 	}
 }
