@@ -22,6 +22,7 @@ public class zTest : PMonoBehaviour
 	public bool test;
 	void Test()
 	{
+		PhysicsEvents es = (PhysicsEvents)Events.CreateAtom.Value;
 		var particles = new AtomBlueprint.Particles
 		{
 			Quarks = new List<IEntity>(Quarks.Convert(q => q.Entity)),
